@@ -2,6 +2,7 @@ const https = require('https');
 
 async function getPresets(self, userId = 1, retry = 2) {
     try {
+        console.log("In get presets");
         let url = `/api/presets`;
         let result = await makeRequest(self, url, "GET")
 
@@ -24,6 +25,7 @@ async function getPresets(self, userId = 1, retry = 2) {
 
     } catch (error) {
         self.log("error", error.message);
+        return [];
     }
 }
 
@@ -44,6 +46,7 @@ async function getSelectedPreset(self, retry = 2){
 
     } catch (error) {
         self.log("error", error.message);
+        return -1;
     }
 }
 
@@ -116,7 +119,7 @@ async function connectPreset(self, preset, btn, mode = "shared", retry=2){
     }catch (error){
         self.log("error", error.message);
         if(retry > 0){
-            self.config.presetStatus[btn] = "connecting"
+            self.presetStatus[btn] = "connecting"
             self.checkFeedbacks("presetStatus")
             await sleep(3000);
 
@@ -210,6 +213,7 @@ async function makeRequest(self, url, method, payload = {}, extraHeaders = {}) {
             let timeout = 1000;
             req.setTimeout(timeout, () => {
                 req.destroy();
+                self.checkConnection();
                 reject(new Error(`Request timed out. Please check the target IP.`));
             });
 
@@ -230,8 +234,5 @@ async function makeRequest(self, url, method, payload = {}, extraHeaders = {}) {
         self.log("error", `Error in request: ${error.message}`);
     }
 }
-
-
-
 
 module.exports = { getPresets, connectPreset, authenticate, getSelectedPreset }

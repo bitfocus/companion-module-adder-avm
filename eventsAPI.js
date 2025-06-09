@@ -65,21 +65,21 @@ class websocket_handler {
                 case("CurrentPresetChanged"):
                     //console.log(JSON.stringify(this.btns.config.presetStatus))
                     this.btns.saveConfig(this.btns.config);
-                    this.btns.checkFeedbacks("presetStatus");
+                    this.btns.checkFeedbacks("presetStatus", "presetStatusBool", "videoStatusBool");
                     break;
                 case("Notification"):
                 	// Clear any pending debounce timer
                     console.log(JSON.stringify(data))
                     if (data.notification) {
                         if (data.notification.data.connectionType==="video" && data.notification.data.found){
-                            this.btns.config.selected.forEach(element => {
-                                this.btns.config.presetStatus[element]= "connected";
+                            this.btns.selected.forEach(element => {
+                                this.btns.presetStatus[element]= "connected";
                             });
                             
                         }else if (data.notification.data.connectionType==="video" && !data.notification.data.found || data.notification.message === "Disconnected"){
                             
-                            this.btns.config.selected.forEach(element => {
-                                this.btns.config.presetStatus[element]= "video_lost";
+                            this.btns.selected.forEach(element => {
+                                this.btns.presetStatus[element]= "video_lost";
                             });
                             
                     } 
@@ -91,7 +91,7 @@ class websocket_handler {
                             console.log("No new messages for 300ms, performing update...");
                             //console.log(this.btns.config.selected, JSON.stringify(this.btns.config.presetStatus[this.btns.config.selected]))
                             this.btns.saveConfig(this.btns.config);
-                            this.btns.checkFeedbacks("presetStatus");
+                            this.btns.checkFeedbacks("presetStatus", "presetStatusBool", "videoStatusBool");
                             }, 300);
                     }
                     break;

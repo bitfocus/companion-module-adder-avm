@@ -3,8 +3,8 @@ const { combineRgb } = require('@companion-module/base')
 module.exports = async function (self) {
 	self.setFeedbackDefinitions({
 		presetStatus: {
-			name: 'Preset Connection Status',
-			label: 'Channel State',
+			name: 'Preset Connection Status - Advanced',
+			label: 'Preset Status',
 			type: 'advanced',
 				options: [
 					{
@@ -65,7 +65,7 @@ module.exports = async function (self) {
 					},
 				],
 			callback: (feedback) => {
-				let connectionStatus = self.config.presetStatus?.[feedback.controlId] || {};
+				let connectionStatus = self.presetStatus?.[feedback.controlId] || {};
 				
 				if (connectionStatus === "connected"){
 					return {
@@ -102,5 +102,33 @@ module.exports = async function (self) {
 
 			},
 		},
+		presetStatusBool: {
+			name: 'Preset Status - Boolean',
+			label: 'Preset Status - Boolean',
+			type: 'boolean',
+			callback: (feedback) => {
+			let connectionStatus = self.presetStatus?.[feedback.controlId] || {};
+				
+				if (connectionStatus === "connected" || connectionStatus === "video_lost"){
+					return true;
+				}else{
+					return false;
+				}
+			}
+		},
+		videoStatusBool: {
+			name: 'Video Status - Boolean',
+			label: 'Video Status - Boolean',
+			type: 'boolean',
+			callback: (feedback) => {
+			let connectionStatus = self.presetStatus?.[feedback.controlId] || {};
+				
+				if (connectionStatus === "video_lost"){
+					return true;
+				}else{
+					return false;
+				}
+			}
+		}
 	})
 }
