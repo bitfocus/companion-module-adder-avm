@@ -48,6 +48,9 @@ class ModuleInstance extends InstanceBase {
 	}
 
 	async checkConnection() {
+		if (this.config.host === undefined || this.config.host === ""){
+			return;
+		}
 		if (this.isChecking) {
 			this.log('debug', 'Skipping duplicate connection check...');
 			return;
@@ -134,6 +137,7 @@ class ModuleInstance extends InstanceBase {
 				label: 'Receiver IP',
 				width: 8,
 				regex: Regex.IP,
+				default: ""
 			},
 			// {
 			// 	type: 'textinput',
