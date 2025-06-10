@@ -79,7 +79,7 @@ module.exports = async function (self) {
 							text: "Connecting"
 						}
 				}else if (connectionStatus === "video_lost") {
-					console.log("In Video Loss Feedback")
+					//console.log("In Video Loss Feedback")
 					if (feedback.options.show_vl){
 						
 						return {
@@ -95,8 +95,8 @@ module.exports = async function (self) {
 					}
 				}else{
 					return {
-						bgcolor: feedback.options.bg_error, // User-selected color
-						color: feedback.options.fg_error // User-selected text color
+						bgcolor: feedback.options.bg_error, 
+						color: feedback.options.fg_error 
 					}					
 				}
 

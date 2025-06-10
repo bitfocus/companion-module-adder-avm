@@ -1,4 +1,5 @@
 const https = require('https');
+const { InstanceStatus } = require('@companion-module/base')
 
 async function getPresets(self, userId = 1, retry = 2) {
     try {
@@ -213,7 +214,10 @@ async function makeRequest(self, url, method, payload = {}, extraHeaders = {}) {
             let timeout = 1000;
             req.setTimeout(timeout, () => {
                 req.destroy();
-                self.checkConnection();
+                if (self.currentStatus != InstanceStatus.ConnectionFailure){
+                    self.currentStatus = InstanceStatus.ConnectionFailure;
+                    self.updateStatus(InstanceStatus.ConnectionFailure, "API Request Failed, Check Connection.")
+                }
                 reject(new Error(`Request timed out. Please check the target IP.`));
             });
 
@@ -227,7 +231,6 @@ async function makeRequest(self, url, method, payload = {}, extraHeaders = {}) {
                 req.write(JSON.stringify(payload));
             }
 
-            // End the request once payload is sent (or immediately if no payload)
             req.end();
         });
     } catch (error) {

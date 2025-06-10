@@ -45,7 +45,6 @@ class websocket_handler {
     
         this.ws.onerror = (error) => {
             this.btns.log('error', `WebSocket error: ${JSON.stringify(error)}`);
-            // do nothing here; timeout or onclose handles retries
         };
     
         this.ws.onclose = () => {
@@ -68,8 +67,7 @@ class websocket_handler {
                     this.btns.checkFeedbacks("presetStatus", "presetStatusBool", "videoStatusBool");
                     break;
                 case("Notification"):
-                	// Clear any pending debounce timer
-                    console.log(JSON.stringify(data))
+                    //console.log(JSON.stringify(data))
                     if (data.notification) {
                         if (data.notification.data.connectionType==="video" && data.notification.data.found){
                             this.btns.selected.forEach(element => {

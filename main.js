@@ -14,96 +14,94 @@ class ModuleInstance extends InstanceBase {
 
 	async init(config) {
 		this.config = config
+		this.currentStatus = InstanceStatus.Connecting;
 
 		if(!this.config.presets){
 			this.config.presets = JSON.stringify([{ id: "None", label: "None" }]);
 		}
 		this.presetStatus={}
 		this.selected=[];
-		this.retryCycle = 0;
+		this.ws = null
 
 		this.connected = await this.checkConnection();
-		console.log(this.connected);
-		console.log(this.selectedPreset)
 		this.saveConfig(this.config);
 		
 		this.updateActions() // export actions
 		this.updateFeedbacks() // export feedbacks
 		this.updateVariableDefinitions() // export variable definitions
-		if (this.config.use_events && this.connected){
-			console.log("Use Events")
-			this.ws = new websocket_handler(this)
+		if (this.config.use_events && this.connected && !this.ws){
+			this.enableWS();
 		}
-		
+		this.startConnectionMonitor();
 	}
 	// When module gets deleted
 	async destroy() {
+		this.stopConnectionMonitor();
+		if (this.openTimeout) {
+			clearTimeout(this.openTimeout);
+			this.openTimeout = null;
+		}
+		if (this.ws) {
+			await this.disableWS();
+		}
 		this.log('debug', 'destroy')
 	}
 
 	async checkConnection() {
-	this.retryCycle++;  // Increment the cycle to invalidate previous retries
-	const currentCycle = this.retryCycle;  // Save the cycle number for this call
-
-	this.selectedPreset = await getSelectedPreset(this);
-
-	if (this.selectedPreset === -1) {
-		this.log("error", "Could not connect to Receiver, Please Check IP Address.");
-		//await this.disableWS();
-
-		// Start retry in background with current cycle
-		this.startRetry(currentCycle);
-		if (this.ws){
-			this.disableWS();
+		if (this.isChecking) {
+			this.log('debug', 'Skipping duplicate connection check...');
+			return;
 		}
-		this.updateStatus(InstanceStatus.ConnectionFailure)
-		return false;
-	} else {
-		if (this.openTimeout) {
-		clearTimeout(this.openTimeout);
-		this.openTimeout = null;
+		this.isChecking = true;
+		try {
+
+			this.selectedPreset = await getSelectedPreset(this, 1, 1);
+
+			if (this.selectedPreset === -1) {
+			this.log("error", "Could not connect to Receiver, Please Check IP Address.");
+			if (this.ws) {
+				this.disableWS();
+			}
+			if (this.currentStatus !== InstanceStatus.ConnectionFailure){
+				this.currentStatus=InstanceStatus.ConnectionFailure;
+				this.updateStatus(InstanceStatus.ConnectionFailure, "Failed to connect to receiver.");
+			}
+
+			return false;
+			} else {
+				//this.log('debug', 'Connected to receiver.');
+				if (this.config.use_events && !this.ws) {
+					await this.enableWS();
+				}
+				if (this.currentStatus !== InstanceStatus.Ok){
+					this.currentStatus=InstanceStatus.Ok;
+					this.updateStatus(InstanceStatus.Ok, "Connected to Receiver.");
+				}
+
+				return true;
+			}
+		} finally {
+			this.isChecking = false; 
 		}
-		this.log('info', 'Connection Established.');
-		this.updateStatus(InstanceStatus.Ok);
-		return true;
 	}
+
+
+	startConnectionMonitor() {
+		// Clear any previous monitor interval
+		if (this.connectionMonitor) {
+			clearInterval(this.connectionMonitor);
+		}
+
+		this.connectionMonitor = setInterval(async () => {
+			await this.checkConnection(); 
+		}, 10000);  // Every 10 seconds
 	}
 
-	startRetry(cycle) {
-	if (this.openTimeout) {
-		clearTimeout(this.openTimeout);
-	}
-
-	this.openTimeout = setTimeout(async () => {
-		// Check if this retry cycle is still current
-		if (cycle !== this.retryCycle) {
-		// Retry cycle has been invalidated by a newer call
-		this.log('debug', 'Retry cycle cancelled.');
-		return;
+	stopConnectionMonitor() {
+		if (this.connectionMonitor) {
+			clearInterval(this.connectionMonitor);
+			this.connectionMonitor = null;
 		}
-
-		this.log('warn', 'Receiver connection timeout retrying...');
-		this.selectedPreset = await getSelectedPreset(this);
-
-		// Check again if still valid cycle after await
-		if (cycle !== this.retryCycle) {
-		this.log('debug', 'Retry cycle cancelled after await.');
-		return;
-		}
-
-		if (this.selectedPreset !== -1) {
-		this.log('info', 'Connection re-established.');
-		clearTimeout(this.openTimeout);
-		this.openTimeout = null;
-
-		if (this.config.use_events) {
-			await this.enableWS();
-		}
-		} else {
-		// Retry again!
-		this.startRetry(cycle);
-		}
-	}, 5000);
 	}
 
 
