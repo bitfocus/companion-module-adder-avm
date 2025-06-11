@@ -1,9 +1,33 @@
 const https = require('https');
 const { InstanceStatus } = require('@companion-module/base')
+const net = require('net');
+const { error } = require('console');
+
+
+function checkReceiver(self, timeout = 3000) {
+  return new Promise((resolve, reject) => {
+    const socket = new net.Socket();
+
+    const onError = () => {
+      socket.destroy();
+      reject(new Error('Host not reachable'));
+    };
+
+    socket.setTimeout(timeout);
+    socket.once('error', onError);
+    socket.once('timeout', onError);
+
+    socket.connect(443, self.config.host, () => {
+      socket.end();
+      resolve(true);  // port is open and reachable
+    });
+  });
+}
+
+
 
 async function getPresets(self, userId = 1, retry = 2) {
     try {
-        console.log("In get presets");
         let url = `/api/presets`;
         let result = await makeRequest(self, url, "GET")
 
@@ -26,7 +50,7 @@ async function getPresets(self, userId = 1, retry = 2) {
 
     } catch (error) {
         self.log("error", error.message);
-        return [];
+        return -1;
     }
 }
 
@@ -173,6 +197,9 @@ async function authenticate(self) {
 
 async function makeRequest(self, url, method, payload = {}, extraHeaders = {}) {
     try {
+        if (!self.connected){
+            self.connected = await self.checkConnection();
+        }
         let headers = { "Content-Type": "application/json" };
         if (extraHeaders) {
             headers = { ...headers, ...extraHeaders };
@@ -184,10 +211,14 @@ async function makeRequest(self, url, method, payload = {}, extraHeaders = {}) {
             path: url,
             rejectUnauthorized: false,
             headers: headers,
-            //agent: method==="GET" ? new https.Agent({keepAlive: false}) : new https.Agent()
+            agent: new https.Agent({keepAlive: false})
         };
 
         return new Promise((resolve, reject) => {
+            if (!self.connected){
+                self.log("warn", "Receiver is not available. Please check connection.");
+                reject(new Error("Receiver not available. Cancelling request."));            
+            }
             let chunks = [];
             const req = https.request(options, (res) => {
                 res.on("data", (chunk) => {
@@ -211,15 +242,15 @@ async function makeRequest(self, url, method, payload = {}, extraHeaders = {}) {
                 });
             });
 
-            let timeout = 1000;
-            req.setTimeout(timeout, () => {
-                req.destroy();
-                if (self.currentStatus != InstanceStatus.ConnectionFailure){
-                    self.currentStatus = InstanceStatus.ConnectionFailure;
-                    self.updateStatus(InstanceStatus.ConnectionFailure, "API Request Failed, Check Connection.")
-                }
-                reject(new Error(`Request timed out. Please check the target IP.`));
-            });
+            // let timeout = 1000;
+            // req.setTimeout(timeout, () => {
+            //     req.destroy();
+            //     if (self.currentStatus != InstanceStatus.ConnectionFailure){
+            //         self.currentStatus = InstanceStatus.ConnectionFailure;
+            //         self.updateStatus(InstanceStatus.ConnectionFailure, "API Request Failed, Check Connection.")
+            //     }
+            //     reject(new Error(`Request timed out. Please check the target IP.`));
+            // });
 
             req.on("error", (error) => {
                 self.log("error", `Request error: ${error.message}`);
@@ -234,8 +265,9 @@ async function makeRequest(self, url, method, payload = {}, extraHeaders = {}) {
             req.end();
         });
     } catch (error) {
+        reject(error)
         self.log("error", `Error in request: ${error.message}`);
     }
 }
 
-module.exports = { getPresets, connectPreset, authenticate, getSelectedPreset }
+module.exports = { getPresets, connectPreset, authenticate, getSelectedPreset, checkReceiver }

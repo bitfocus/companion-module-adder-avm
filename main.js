@@ -4,7 +4,7 @@ const UpdateActions = require('./actions')
 const UpdateFeedbacks = require('./feedbacks')
 const UpdateVariableDefinitions = require('./variables')
 const { websocket_handler } = require("./eventsAPI")
-const { getPresets, getSelectedPreset } = require("./api")
+const { getPresets, getSelectedPreset, checkReceiver } = require("./api")
 
 
 class ModuleInstance extends InstanceBase {
@@ -22,16 +22,16 @@ class ModuleInstance extends InstanceBase {
 		this.presetStatus={}
 		this.selected=[];
 		this.ws = null
-
+		this.conCounter=0;
 		this.connected = await this.checkConnection();
 		this.saveConfig(this.config);
 		
 		this.updateActions() // export actions
 		this.updateFeedbacks() // export feedbacks
 		this.updateVariableDefinitions() // export variable definitions
-		if (this.config.use_events && this.connected && !this.ws){
-			this.enableWS();
-		}
+		// if (this.config.use_events && this.connected && !this.ws){
+		// 	this.enableWS();
+		// }
 		this.startConnectionMonitor();
 	}
 	// When module gets deleted
@@ -57,22 +57,46 @@ class ModuleInstance extends InstanceBase {
 		}
 		this.isChecking = true;
 		try {
+			let success = true;
+			// if(this.conCounter===0){
+			// 	const presets = await getPresets(this);
+			// 	if (presets === -1){
+			// 		success = false;
+			// 	}else{
+			// 		if(this.config.presets !== JSON.stringify(presets)){
+			// 			this.config.presets = JSON.stringify(presets);
+			// 			this.updateActions();
+			// 		}
+			// 	}			
+			// }else{
+			// 	const selected= await getSelectedPreset(this, 1, 1);
+			// 	if (selected === -1){
+			// 		success=false;
+			// 	}else{
+			// 		this.selectedPreset = selected;
+			// 	}
+			// 
 
-			this.selectedPreset = await getSelectedPreset(this, 1, 1);
-
-			if (this.selectedPreset === -1) {
-			this.log("error", "Could not connect to Receiver, Please Check IP Address.");
-			if (this.ws) {
-				this.disableWS();
+			try {
+				await checkReceiver(this);
+				success = true;
+			} catch (error) {
+				success = false;
 			}
-			if (this.currentStatus !== InstanceStatus.ConnectionFailure){
-				this.currentStatus=InstanceStatus.ConnectionFailure;
-				this.updateStatus(InstanceStatus.ConnectionFailure, "Failed to connect to receiver.");
-			}
 
-			return false;
+			if (!success) {
+				this.log("error", "Could not connect to Receiver, Please Check IP Address.");
+				if (this.ws) {
+					this.disableWS();
+				}
+				if (this.currentStatus !== InstanceStatus.ConnectionFailure){
+					this.currentStatus=InstanceStatus.ConnectionFailure;
+					this.updateStatus(InstanceStatus.ConnectionFailure, "Failed to connect to receiver.");
+				}
+				return false;
 			} else {
-				//this.log('debug', 'Connected to receiver.');
+
+				this.conCounter = (this.conCounter + 1) % 2;
 				if (this.config.use_events && !this.ws) {
 					await this.enableWS();
 				}
@@ -96,7 +120,20 @@ class ModuleInstance extends InstanceBase {
 		}
 
 		this.connectionMonitor = setInterval(async () => {
-			await this.checkConnection(); 
+			this.connected = await this.checkConnection(); 
+			if (this.connected && this.conCounter == 0){
+				const presets = await getPresets(this);
+				if (presets !== -1 && this.config.presets !== JSON.stringify(presets)){
+					this.config.presets = JSON.stringify(presets);
+					this.updateActions();
+				}else{
+					const selected= await getSelectedPreset(this, 1, 1);
+					if (selected !== -1){
+						this.selectedPreset = selected;
+					}
+				}
+			this.conCounter = (this.conCounter + 1) % 2;
+			}
 		}, 10000);  // Every 10 seconds
 	}
 

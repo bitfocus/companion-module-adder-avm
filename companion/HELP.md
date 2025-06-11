@@ -1,5 +1,5 @@
 ## Adder AVM Companion Module
-This module connects to an [Adder Infinity AVM Receiver](https://www.adder.com/en/kvm-solutions/adderview-matrix-c1100-user-station) and allows for connecting and disconnecting presets. Logs have been added to identify connection errors.
+This module connects to an [Adder AVM Receiver](https://www.adder.com/en/kvm-solutions/adderview-matrix-c1100-user-station) and allows for connecting and disconnecting presets. Logs have been added to identify connection errors.
 
 **This module is provided "as is" without any warranties, express or implied. The developer assumes no responsibility for any issues, malfunctions, or damages that may arise from its use. By using this module, you acknowledge that you do so at your own risk. Compatibility with future versions of Bitfocus Companion and Adder AVM is not guaranteed.**
 
@@ -18,6 +18,24 @@ This module connects to an [Adder Infinity AVM Receiver](https://www.adder.com/e
 
 Configuration | Help 
 --------------|----------
+<br>
+
+Additional Help and Tips:
+- The feedback [Preset Connection Status](#preset-connection-status) will allow you to receive feedback based on the response from the receiver.
+- If you have enabled "Listen for Events" and are using feedback, the button will update if a "Video Loss" event is triggered.
+- Can be used with Companions Step options or Duration Groups to add Disconnection Features. Adding a Step 2 or Duration Group combined with the [Disconnect Preset](#disconnect-preset) will allow you to toggle the connection on the same button.
+
+#### Disconnect
+- Action to disconnect connected receiver.
+
+<br>
+
+### Feedback
+#### Preset Connection Status
+A Feedback option that allows for different button background/text colours based on the state of the connections specified in the Actions. These colours can be customized.
+
+- When does feedback get updated?
+Feedback will get updated whenever the Action is attempted. When Listening for Events 
 **Label**  | Your friendly name for the AVM Receiver
 **Receiver IP** | Target IP Address for the AVM Receiver
 **password** | User password if required
@@ -38,25 +56,7 @@ Option | help
 **Learn** | Refreshes available presets. (Only available on Companion)
 **Preset** | Name of the Preset to connect.
 
-<br>
-<br>
-
-Additional Help and Tips:
-- The feedback [Preset Connection Status](#preset-connection-status) will allow you to receive feedback based on the response from the receiver.
-- If you have enabled "Listen for Events" and are using feedback, the button will update if a "Video Loss" event is triggered.
-- Can be used with Companions Step options or Duration Groups to add Disconnection Features. Adding a Step 2 or Duration Group combined with the [Disconnect Preset](#disconnect-preset) will allow you to toggle the connection on the same button.
-
-#### Disconnect
-- Action to disconnect connected receiver.
-
-<br>
-
-### Feedback
-#### Preset Connection Status
-A Feedback option that allows for different button background/text colours based on the state of the connections specified in the Actions. These colours can be customized.
-
-- When does feedback get updated?
-Feedback will get updated whenever the Action is attempted. When Listening for Events is enabled, the Buttons feedback will get refreshed whenever a message is received.
+<br>is enabled, the Buttons feedback will get refreshed whenever a message is received.
 
 - What does this feedback provide?
 Whenever a connection is attempted, the receiver will return a success or failure. The feedback will change the background based on this state. It will also provide feedback for a video loss event if configured. These are possible states:

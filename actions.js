@@ -7,6 +7,9 @@ module.exports = function (self) {
 			name: 'Refresh Presets',
 			callback: async (event) => {
 				let presets = await getPresets(self)
+				if(presets===-1){
+					return;
+				}
 				self.config.presets = JSON.stringify(presets);
 				self.saveConfig(self.config);
 				self.updateActions();
@@ -25,6 +28,10 @@ module.exports = function (self) {
 			],
 			learn: async (action) => {
 				let presets = await getPresets(self)
+				if (presets===-1)
+				{
+					return;
+				}
 				self.config.presets = JSON.stringify(presets);
 				self.saveConfig(self.config);
 				self.updateActions();
