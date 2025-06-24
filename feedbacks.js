@@ -8,6 +8,14 @@ module.exports = async function (self) {
 			type: 'advanced',
 				options: [
 					{
+						type: 'dropdown',
+						label: 'Preset',
+						id: 'preset',
+						tooltip: 'Preset to track connection status.',
+						choices: JSON.parse(self.config.presets),
+						default: JSON.parse(self.config.presets)[0].id
+					},
+					{
 						type: 'colorpicker',
 						label: 'Connected Background Color',
 						id: 'bg_connected',
@@ -65,7 +73,7 @@ module.exports = async function (self) {
 					},
 				],
 			callback: (feedback) => {
-				let connectionStatus = self.presetStatus?.[feedback.controlId] || {};
+				let connectionStatus = self.presetStatus?.[feedback.options.preset] || {};
 				
 				if (connectionStatus === "connected"){
 					return {
@@ -79,7 +87,6 @@ module.exports = async function (self) {
 							text: "Connecting"
 						}
 				}else if (connectionStatus === "video_lost") {
-					//console.log("In Video Loss Feedback")
 					if (feedback.options.show_vl){
 						
 						return {
@@ -106,8 +113,18 @@ module.exports = async function (self) {
 			name: 'Preset Status - Boolean',
 			label: 'Preset Status - Boolean',
 			type: 'boolean',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Preset',
+					id: 'preset',
+					tooltip: 'Preset to track connection status.',
+					choices: JSON.parse(self.config.presets),
+					default: JSON.parse(self.config.presets)[0].id
+				},
+			],
 			callback: (feedback) => {
-			let connectionStatus = self.presetStatus?.[feedback.controlId] || {};
+			let connectionStatus = self.presetStatus?.[feedback.options.preset] || {};
 				
 				if (connectionStatus === "connected" || connectionStatus === "video_lost"){
 					return true;
@@ -120,8 +137,18 @@ module.exports = async function (self) {
 			name: 'Video Status - Boolean',
 			label: 'Video Status - Boolean',
 			type: 'boolean',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Preset',
+					id: 'preset',
+					tooltip: 'Preset to track connection status.',
+					choices: JSON.parse(self.config.presets),
+					default: JSON.parse(self.config.presets)[0].id
+				},
+			],
 			callback: (feedback) => {
-			let connectionStatus = self.presetStatus?.[feedback.controlId] || {};
+			let connectionStatus = self.presetStatus?.[feedback.options.preset] || {};
 				
 				if (connectionStatus === "video_lost"){
 					return true;

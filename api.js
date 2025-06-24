@@ -144,8 +144,8 @@ async function connectPreset(self, preset, btn, mode = "shared", retry=2){
     }catch (error){
         self.log("error", error.message);
         if(retry > 0){
-            self.presetStatus[btn] = "connecting"
-            self.checkFeedbacks("presetStatus")
+            self.presetStatus[preset] = "connecting"
+            self.checkFeedbacks("presetStatus", "presetStatusBool", "videoStatusBool");
             await sleep(3000);
 
             return await connectPreset(self, preset, btn, mode, retry-=1);

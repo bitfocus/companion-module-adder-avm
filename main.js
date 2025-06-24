@@ -24,14 +24,18 @@ class ModuleInstance extends InstanceBase {
 		this.ws = null
 		this.conCounter=0;
 		this.connected = await this.checkConnection();
+		if (this.connected){
+			const selected= await getSelectedPreset(this, 1, 1);
+			if (selected !== -1 && this.selectedPreset != selected){
+				this.selectedPreset = selected;
+				this.checkFeedbacks("presetStatus", "presetStatusBool", "videoStatusBool");
+			}
+		}
 		this.saveConfig(this.config);
 		
 		this.updateActions() // export actions
 		this.updateFeedbacks() // export feedbacks
 		this.updateVariableDefinitions() // export variable definitions
-		// if (this.config.use_events && this.connected && !this.ws){
-		// 	this.enableWS();
-		// }
 		this.startConnectionMonitor();
 	}
 	// When module gets deleted
@@ -58,25 +62,6 @@ class ModuleInstance extends InstanceBase {
 		this.isChecking = true;
 		try {
 			let success = true;
-			// if(this.conCounter===0){
-			// 	const presets = await getPresets(this);
-			// 	if (presets === -1){
-			// 		success = false;
-			// 	}else{
-			// 		if(this.config.presets !== JSON.stringify(presets)){
-			// 			this.config.presets = JSON.stringify(presets);
-			// 			this.updateActions();
-			// 		}
-			// 	}			
-			// }else{
-			// 	const selected= await getSelectedPreset(this, 1, 1);
-			// 	if (selected === -1){
-			// 		success=false;
-			// 	}else{
-			// 		this.selectedPreset = selected;
-			// 	}
-			// 
-
 			try {
 				await checkReceiver(this);
 				success = true;
@@ -97,6 +82,7 @@ class ModuleInstance extends InstanceBase {
 			} else {
 
 				this.conCounter = (this.conCounter + 1) % 2;
+				
 				if (this.config.use_events && !this.ws) {
 					await this.enableWS();
 				}
@@ -126,14 +112,17 @@ class ModuleInstance extends InstanceBase {
 				if (presets !== -1 && this.config.presets !== JSON.stringify(presets)){
 					this.config.presets = JSON.stringify(presets);
 					this.updateActions();
-				}else{
+					this.updateFeedbacks();
+				}
+			}else{
 					const selected= await getSelectedPreset(this, 1, 1);
-					if (selected !== -1){
+					if (selected !== -1 && this.selectedPreset != selected){
 						this.selectedPreset = selected;
+						this.checkFeedbacks("presetStatus", "presetStatusBool", "videoStatusBool");
 					}
 				}
 			this.conCounter = (this.conCounter + 1) % 2;
-			}
+			
 		}, 10000);  // Every 10 seconds
 	}
 
@@ -176,12 +165,6 @@ class ModuleInstance extends InstanceBase {
 				regex: Regex.IP,
 				default: ""
 			},
-			// {
-			// 	type: 'textinput',
-			// 	id: 'username',
-			// 	label: 'Username',
-			// 	width: 8,
-			// },
 			{
 				type: 'textinput',
 				id: 'password',

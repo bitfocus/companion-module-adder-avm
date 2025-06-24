@@ -13,6 +13,7 @@ module.exports = function (self) {
 				self.config.presets = JSON.stringify(presets);
 				self.saveConfig(self.config);
 				self.updateActions();
+				self.updateFeedbacks();
 			}
 		},
 		change_preset: {
@@ -35,13 +36,14 @@ module.exports = function (self) {
 				self.config.presets = JSON.stringify(presets);
 				self.saveConfig(self.config);
 				self.updateActions();
+				self.updateFeedbacks();
 			},
 			callback: async (action) => {
 				let connected = await connectPreset(self, action.options.preset, action.controlId);
 				Object.keys(self.presetStatus).forEach(v => self.presetStatus[v] = "disconnected")
 				if (connected){
-					self.presetStatus[action.controlId] = "connected";
-					self.selected = [action.controlId]
+					self.presetStatus[action.options.preset] = "connected";
+					self.selected = [action.options.preset]
 					self.selectedPreset = action.options.preset;
 				}
 				//console.log(self.presetStatus[action.controlId])
@@ -50,19 +52,17 @@ module.exports = function (self) {
 			},
 			subscribe: async (action) => {
 				const preset = action.options.preset;
-				const button = action.controlId;
 				//let selected = await getSelectedPreset(self);
-
-				self.presetStatus[button] = self.selectedPreset === preset ? "connected":"disconnected"
-				if(self.presetStatus[button] === "connected"){
-					self.selected.push(button);
+				self.presetStatus[preset] = self.selectedPreset === preset ? "connected":"disconnected"
+				if(self.presetStatus[preset] === "connected"){
+					self.selected.push(preset);
 				}
 				self.saveConfig(self.config);
 				self.checkFeedbacks("presetStatus", "presetStatusBool", "videoStatusBool");
 
 			},
 			unsubscribe: async (action) => {
-				delete self.presetStatus[action.controlId]
+				delete self.presetStatus[action.options.preset]
 				self.saveConfig(self.config);
 			}
 		},
@@ -72,7 +72,7 @@ module.exports = function (self) {
 			],
 			callback: async (action) => {
 				await connectPreset(self, 0);
-				self.presetStatus[action.controlId]= "disconnected";
+				self.presetStatus[action.options.preset]= "disconnected";
 				self.selected = [];
 				self.selectedPreset = 0;
 				self.saveConfig(self.config);
