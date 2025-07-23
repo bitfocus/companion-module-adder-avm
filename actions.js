@@ -72,7 +72,7 @@ module.exports = function (self) {
 			],
 			callback: async (action) => {
 				await connectPreset(self, 0);
-				self.presetStatus[action.options.preset]= "disconnected";
+				Object.keys(self.presetStatus).forEach(v => self.presetStatus[v] = "disconnected");
 				self.selected = [];
 				self.selectedPreset = 0;
 				self.saveConfig(self.config);
