@@ -39,7 +39,7 @@ module.exports = function (self) {
 				self.updateFeedbacks();
 			},
 			callback: async (action) => {
-				let connected = await connectPreset(self, action.options.preset, action.controlId);
+				let connected = await connectPreset(self, action.options.preset);
 				Object.keys(self.presetStatus).forEach(v => self.presetStatus[v] = "disconnected")
 				if (connected){
 					self.presetStatus[action.options.preset] = "connected";

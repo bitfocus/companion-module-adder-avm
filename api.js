@@ -79,7 +79,7 @@ function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function connectPreset(self, preset, btn, mode = "shared", retry=2){
+async function connectPreset(self, preset, mode = "shared", retry=2){
     try {
         if (!self.config.token && retry > 0){
             await authenticate(self);
@@ -148,7 +148,7 @@ async function connectPreset(self, preset, btn, mode = "shared", retry=2){
             self.checkFeedbacks("presetStatus", "presetStatusBool", "videoStatusBool");
             await sleep(3000);
 
-            return await connectPreset(self, preset, btn, mode, retry-=1);
+            return await connectPreset(self, preset, mode, retry-=1);
         }
         self.log("error", "Failed to change preset, please check your connection");
         return false

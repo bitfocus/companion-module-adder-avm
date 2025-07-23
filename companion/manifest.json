@@ -3,7 +3,7 @@
 	"name": "adder-avm",
 	"shortname": "AVM",
 	"description": "Companion Module to Control an Adder AVM Receiver",
-	"version": "1.2.1",
+	"version": "1.2.2",
 	"license": "MIT",
 	"repository": "git+https://github.com/bitfocus/companion-module-adder-avm.git",
 	"bugs": "https://github.com/bitfocus/companion-module-adder-avm/issues",
